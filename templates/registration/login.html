@@ -1,0 +1,62 @@
+{% extends "login_base.html" %}
+
+{% block webtittle %}
+<title>Login - Giant Fish</title>
+{% endblock %}
+
+{% block header%}
+
+<h2 style="text-align:center;"><strong>Login</strong></h2>
+{% if form.errors %}
+<p style="color:#555; text-align:center;" >Your username and password didn't match. Please try again.</p>
+{% endif %}
+
+{% if next %}
+    {% if user.is_authenticated %}
+    <p>Your account doesn't have access to this page. To proceed,
+    please login with an account that has access.</p>
+    {% else %}
+    <p>Please login to see this page.</p>
+    {% endif %}
+{% endif %}
+
+{% endblock %}
+
+
+
+{% block content %}
+
+     <div class="contact-form">
+     <div class="signin">
+
+<form method="post" action="{% url 'django.contrib.auth.views.login' %}">
+{% csrf_token %}
+    {{ form.username }}
+    {{ form.password }}
+
+{# Assumes you setup the password_reset view in your URLconf #}
+<p><a href="{% url 'password_reset' %}">Forgot Password?</a></p>
+
+<input id="sign-in" type="submit" value="Sign In" />
+<a id="sign-up" href="{% url 'register' %}">Sign Up</a>
+
+<input type="hidden" name="next" value="{{ next }}" />
+</form>
+</div>
+</div>
+
+
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+    var el = document.getElementById('id_username'); 
+    el.setAttribute("class", "user");
+    el.setAttribute("onfocus", "this.value = '';");
+    el.setAttribute("onblur","if (this.value == '') {this.value = 'Username';}");
+    el = document.getElementById('id_password'); 
+    el.setAttribute("class", "pass");
+    el.setAttribute("onfocus", "this.value = '';");
+    el.setAttribute("onblur","if (this.value == '') {this.value = 'Password';}");
+</script>
+{% endblock %}

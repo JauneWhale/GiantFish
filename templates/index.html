@@ -1,0 +1,512 @@
+{% load staticfiles %}
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Hello,{{request.user.username}} - Giant Fish</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link  rel="stylesheet" />
+<script src="{% static "images/jquery.min.js" %}" type="text/javascript"></script>
+
+
+{% if request.user.is_authenticated %}
+<link rel="stylesheet" href="{% static "css/my.css" %}"/>
+<link rel="stylesheet" href="{% static "css/normalize.css" %}"/>
+<script type= "text/javascript">/*<![CDATA[*///加载时适应浏览器高度
+$(document).ready(function() {
+    //模块尺寸
+    var minwidth = 1024;
+    var minheight = 600;
+    var sb1 = 150;
+    var sb2 = 250;
+    var sb3 = 250;
+    var height = $(window).height();
+    var width = $(window).width();
+    if(height<minheight){
+    	height=minheight;
+    }
+    if(width<minwidth){
+    	width=minwidth;
+    }
+    $('#mainContainer').css('width',  width*0.95); 
+    $('#friendBar1').css('height', height-80);     
+    $('#friendBar2').css('height', height-80);     
+    $('#chatBar').css('height', height-80-6);         
+    $('#chatBar').css('width',  width-sb1-sb2-sb3); 
+    $('#slidebar1').css('height', height-37-170);     
+    $('#slidebar2').css('height', height-80);      
+    $('div.chat-content').css('height',height-80-20-45-8);
+    $('#text-send').css('width',width-sb1-sb2-sb3-120);
+    $('#First-info').css('height',(height-80)*0.5-4.5);
+    $('#Second-info').css('height',(height-80)*0.5-4.5);
+
+	$('a[groupid]').bind("click",function(){
+        if($(this).attr("disabled")=="disabled")
+            return;
+        //清除标志
+        var pre_group = document.getElementById("pre_group").value;
+        var item = document.getElementById(pre_group);
+        item.removeAttribute("disabled");
+        var c = item.firstChild;
+        c.removeAttribute("style");
+        var p = item.parentNode;
+        p.removeAttribute("style");
+        //设定
+        groupname = $(this).attr("groupid");
+        document.getElementById("pre_group").value = groupname
+        item = document.getElementById(groupname);
+        item.setAttribute("disabled","disabled");
+        c = item.firstChild;
+        c.setAttribute("style","padding-top: 7px;margin-left: 10px;color: #242b32;");
+        p = item.parentNode;
+        p.setAttribute("style","background:white;");
+        
+		$.post("./post/",
+			{	groupname: groupname,
+				post_type: "get_friends"
+			},
+			function(data){
+                var content = document.getElementById('slidebar2'); 
+                content.innerHTML = "";
+                for(var ele in data){
+                    //console.log(data[ele]);//下标
+                    if(data[ele][1]!=0)
+                        content.innerHTML += '<ul class="slide3" id="'+data[ele][0]+'"><a userid="'+data[ele][0]+'" href="#"><img id="'+data[ele][0]+'-img" class="headimg-off" src="{% static 'images/'%}'+data[ele][0]+'.png" alt="Menu"/> <div class="info"><p id="'+data[ele][0]+'-p" class="small">'+data[ele][1]+'</p><div class="user">'+data[ele][0]+'</div><div id="'+data[ele][0]+'-status" class="status off"> offline</div></div><input type="hidden" id="chat_num" value="0"/></a></ul>';
+                    else
+                        content.innerHTML += '<ul class="slide3" id="'+data[ele][0]+'"><a userid="'+data[ele][0]+'" href="#"><img id="'+data[ele][0]+'-img" class="headimg-off" src="{% static 'images/'%}'+data[ele][0]+'.png" alt="Menu"/> <div class="info"><p id="'+data[ele][0]+'-p" class="small-none"></p><div class="user">'+data[ele][0]+'</div><div id="'+data[ele][0]+'-status" class="status off"> offline</div></div><input type="hidden" id="chat_num" value="0"/></a></ul>';
+                }
+                $('a[userid]').bind("click",function(){
+                    if($(this).attr("disabled")=="disabled")
+                        return;
+                    if(document.getElementById("receiver").value==$(this).attr("userid"))
+                        return;
+                    document.getElementById("text-send").removeAttribute("disabled");
+                    document.getElementById("send-button").removeAttribute("disabled");
+                    document.getElementById("load-more").removeAttribute("disabled");
+                    var chatter = $(this).attr("userid");
+                    if(ptag = document.getElementById(chatter+'-p')){
+                        ptag.innerHTML = "";
+                        ptag.setAttribute("class","small-none");
+                    }
+                    document.getElementById("receiver").value=chatter;
+                    $.post("./post/",
+                    {   chatter: chatter,
+                        post_type: "begin_chat"
+                    },
+                    function(data){
+                        document.getElementById('chat-content').innerHTML = ""; 
+                        for(var i in data){
+                            send = (data[i].sender==chatter)?0:1;
+                            //console.debug(data[i].sender);
+                            print_chat_content(data[i],send)
+                        }
+                    },
+                    'json'
+                    );
+                    var info = document.getElementById("First-info");
+                    info.getElementsByTagName("img")[0].setAttribute('src','{% static "images/"%}'+chatter+'.png');        
+                    info.getElementsByTagName("span")[0].innerHTML = chatter;
+                    //info.getElementsByTagName("p")[0].setAttribute('src','{% static "images/"%}'+chatter+'.png');
+                });
+			},
+            'json'
+		);
+	});
+    $('a[userid]').bind("click",function(){
+        if($(this).attr("disabled")=="disabled")
+            return;
+        if(document.getElementById("receiver").value==$(this).attr("userid"))
+            return;
+        document.getElementById("text-send").removeAttribute("disabled");
+        document.getElementById("send-button").removeAttribute("disabled");
+        document.getElementById("load-more").removeAttribute("disabled");
+        var chatter = $(this).attr("userid");
+        if(ptag = document.getElementById(chatter+'-p')){
+            ptag.innerHTML = "";
+            ptag.setAttribute("class","small-none");
+        }
+        document.getElementById("receiver").value=chatter;
+        $.post("./post/",
+            {   chatter: chatter,
+                post_type: "begin_chat"
+            },
+            function(data){
+                document.getElementById('chat-content').innerHTML = ""; 
+                for(var i in data){
+                    send = (data[i].sender==chatter)?0:1;
+                    //console.debug(data[i].sender);
+                    print_chat_content(data[i],send)
+                }
+            },
+            'json'
+        );
+
+        var info = document.getElementById("First-info");
+        info.getElementsByTagName("img")[0].setAttribute('src','{% static "images/"%}'+chatter+'.png');        
+        info.getElementsByTagName("span")[0].innerHTML = chatter;
+        //info.getElementsByTagName("p")[0].setAttribute('src','{% static "images/"%}'+chatter+'.png');
+    });
+    $('#load-more').bind("click",function(){
+        if($(this).attr("disabled")=="disabled")
+            return;
+        var content = document.getElementById('chat-content');
+        var och = content.scrollHeight;
+        var chatter = document.getElementById("receiver").value;
+        var last_id = content.firstChild.id;
+        console.log(last_id);
+        $.post("./post/",
+            {   chatter: chatter,
+                last_id: last_id,
+                post_type: "load_more"
+            },
+            function(data){
+                console.debug(data[0]);
+                if(data[0]==undefined){
+                    document.getElementById("load-more").setAttribute("disabled","disabled");
+                    console.debug("null")
+                }
+                var before = content.innerHTML;
+                content.innerHTML = ""; 
+                for(var i in data){
+                    //console.debug(data[i].content);
+                    var send = (data[i].sender==chatter)?0:1;
+                    print_chat_content(data[i],send)
+                }
+                document.getElementById('chat-content').innerHTML += before;
+                document.getElementById('chat-area').scrollTop+=content.scrollHeight-och;
+            },
+            'json'
+        );
+    });
+})
+//改变窗体大小时适应浏览器高度
+$(window).resize(function() {
+    //模块尺寸
+    var minwidth = 1024;
+    var minheight = 600;
+    var sb1 = 150;
+    var sb2 = 250;
+    var sb3 = 250;
+    var height = $(window).height();
+    var width = $(window).width();
+    if(height<minheight){
+    	height=minheight;
+    }
+    if(width<minwidth){
+    	width=minwidth;
+    }
+    $('#mainContainer').css('width',  width*0.95); 
+    $('#friendBar1').css('height', height-80);     
+    $('#friendBar2').css('height', height-80);     
+    $('#chatBar').css('height', height-80-6);         
+    $('#chatBar').css('width',  width-sb1-sb2-sb3); 
+    $('#slidebar1').css('height', height-37-170);     
+    $('#slidebar2').css('height', height-80);      
+    $('div.chat-content').css('height',height-80-20-50-8);
+    $('#text-send').css('width',width-sb1-sb2-sb3-120);
+    $('#First-info').css('height',(height-80)*0.5-4.5);
+    $('#Second-info').css('height',(height-80)*0.5-4.5);
+
+});
+
+function updateState(){
+    // Obtain the friend msg
+    stats = {
+        "friend_request" : 2, 
+        "friend_delete"  : 3, 
+        "friend_accept"  : 4, 
+    };
+    $.post("./post/",
+        {   
+            post_type: "fresh_states"
+        },
+        function(data){
+            //console.debug(data);
+        },
+        'json'
+    );
+    // Fresh the stat of the friends, including
+    //      - Group new talk
+    //      - pregroup friend
+    //      - new chat come
+    var pregroup=document.getElementById("pre_group").value;
+    var prechatter=document.getElementById("receiver").value;
+    $.post("./post/",
+        {   
+            post_type: "fresh_friends",
+            pregroup:  pregroup,
+            prechatter: prechatter
+        },
+        function(data){
+            if(!data.friends)
+                return;
+            var f = data.friends;
+            var g = data.groups;
+            var c = data.chats;
+            var content = document.getElementById('slidebar2'); 
+            for(var ele in f){
+                var inf = document.getElementById(f[ele][0]);
+                var small = document.getElementById(f[ele][0]+'-p');
+                if(f[ele][1]!=small.innerHTML && f[ele][0]!=prechatter){
+                    console.log(tmp);
+                    content.removeChild(inf);
+                    content.insertBefore(inf,content.firstChild);
+                    small.setAttribute("class","small");
+                    small.innerHTML = f[ele][1];
+                }
+                var tmp = document.getElementById(f[ele][0]+'-status');
+                var head_img = document.getElementById(f[ele][0]+'-img');
+                if(f[ele][3]=='T'&&tmp.innerHTML=="offline"){
+                    head_img.setAttribute("class","headimg-on");
+                    tmp.setAttribute("class","status on");
+                    tmp.innerHTML = "online";
+                }
+                else if(f[ele][3]=='F'&&tmp.innerHTML=="online"){
+                    head_img.setAttribute("class","headimg-off");
+                    tmp.setAttribute("class","status off");
+                    tmp.innerHTML = "offline";
+                }
+            };
+            for (var i in g) {
+                
+            };
+            for (var i in c){
+                console.log(c[i]);
+                var chatter = document.getElementById("receiver").value;
+                send = (c[i].sender==chatter)?0:1;
+                print_chat_content(c[i],send);
+                // 内容过多时,将滚动条放置到最底端
+                document.getElementById('chat-area').scrollTop=content.scrollHeight;
+            };
+        },
+        'json'
+    );
+    setTimeout("updateState()", 1000);        //每秒更新一次  */
+}
+
+$(function(){
+	//Get our elements for faster access and set overlay width
+	var div = $('div.slide1'),
+		ul = $('ul.slide1'),
+		ulPadding = 15;
+
+	//Get menu width
+	var divHeight = div.height();
+
+	//Remove scrollbars	
+	div.css({overflow: 'hidden'});
+	
+	//Find last image container
+	var lastUl = div.find('ul:last-child');
+	
+	//When user move mouse over menu
+	div.mousemove(function(e){
+		//As images are loaded ul width increases,
+		//so we recalculate it each time
+		var ulHeight = lastUl[0].offsetTop + lastUl.outerHeight() + ulPadding;	
+		var top = (e.pageY - div.offset().top) * (ulHeight-divHeight) / divHeight;
+		div.scrollTop(top);
+	});
+});
+
+$(function(){
+	//Get our elements for faster access and set overlay width
+	var div = $('div.slide2'),
+		ul = $('ul.slide3'),
+		ulPadding = -50;
+
+	//Get menu width
+	var divHeight = div.height();
+
+	//Remove scrollbars	
+	div.css({overflow: 'hidden'});
+	
+	//Find last image container
+	var lastUl = div.find('ul:last-child');
+	
+	//When user move mouse over menu
+	div.mousemove(function(e){
+		//As images are loaded ul width increases,
+		//so we recalculate it each time
+		var ulHeight = lastUl[0].offsetTop + lastUl.outerHeight() + ulPadding;	
+		//console.debug(ulHeight);
+		var top = (e.pageY - div.offset().top) * (ulHeight-divHeight) / divHeight;
+		div.scrollTop(top);
+	});
+});
+
+function print_chat_content(item,send){
+    //console.log(item.id);
+    var content = document.getElementById('chat-content'); 
+    //User and friend head img
+    var sender_img = '{% static "images/"%}'+'{{request.user.username}}'+'.png';//content.getElementById('sender_img').src;   
+    var receiver_img = '{% static "images/"%}'+item.sender+'.png';//content.getElementById('receiver_img').src; 
+    if(send==1){   
+        content.innerHTML += '<li id="'+item.id+'"class="mar-btm"><div class="media-right"><img src="'+sender_img+'" class="img-sm" alt="Profile Picture"></div><div class="media-body pad-hor speech-right"><div class="speech"><p class="chat-details">'+item.content+'</p><p class="speech-time"><i class="fa fa-clock-o fa-fw"></i>'+item.time+'</p></div></div></li>';
+    }else {     
+        content.innerHTML += '<li id="'+item.id+'"class="mar-btm"><div class="media-left"><img src="'+receiver_img+'" class="img-sm" alt="Profile Picture"></div><div class="media-body pad-hor"><div class="speech"><p class="chat-details">'+item.content+'</p><p class="speech-time"><i class="fa fa-clock-o fa-fw"></i>'+item.time+'</p></div></div></li>';
+    }   
+
+}
+
+
+$(function() {  
+    updateState();    //更新信息  
+    //表单 submit 事件  
+    $("#chatForm").submit(function() {  
+    	//var iNow = -1;    //用来累加改变左右浮动
+    	var text = document.getElementById('text-send');  
+    	if(text.value !=''){   
+        	//ajax 提交表单  
+        	//console.log($('#chatForm').serialize());
+        	$.post("./post/",  
+            	$('#chatForm').serialize(),
+                function(data){
+                    print_chat_content(data,1);
+                    //iNow++;
+                    text.value = '';
+                    // 内容过多时,将滚动条放置到最底端
+                    var content = document.getElementById('chat-content');       
+                    document.getElementById('chat-area').scrollTop=content.scrollHeight;
+                },
+                "json"
+        	);
+    	}        
+    	return false;
+    }); 
+});  
+
+
+/*]]>*/</script>
+</head>
+<body>
+	<div id="test"></div>
+<div id="mainContainer" class="ui">
+     <div id="friendBar1">
+	<div id="header">
+		<p id="logo">GiantYu</p>
+	</div>
+	<div id="slidebar1"  class="slide1">
+        <input type="hidden" id="pre_group" value="Friend"/>
+		{% for group in groups %}
+		{%if group == pregroup%} 
+        <ul style="background:white;"><a disabled="disabled" id="{{group}}" groupid="{{group}}"href="#" ><p style="padding-top: 7px;margin-left: 10px;color: #242b32;">{{group}}</p></a></ul>
+		{% else %} 
+        <ul><a id="{{group}}" groupid="{{group}}"href="#" ><p>{{group}}</p></a></ul>
+	    {% endif %}
+	    {% endfor %}
+	</div>
+    </div>
+    <div id="friendBar2">
+		<form action="#" class="search">
+			<input placeholder="search..." type="search" name="" id="">
+		</form>
+	<div id="slidebar2"  class="slide2">
+		{% for friend in friends %}
+	    <ul class="slide3" id="{{friend.username}}"><a userid="{{friend.username}}" href="#"><img id="{{friend.username}}-img" class="headimg-off" src='{% static "images/"%}{{friend.username}}.png' alt="Menu"/>
+		<div class="info">
+            {% if friend.num == 0 %}
+            <p id="{{friend.username}}-p" class="small-none"></p>
+            {% else %}
+            <p id="{{friend.username}}-p" class="small">{{friend.num}}</p>
+            {% endif %}
+			<div class="user">{{friend.username}}</div>
+			<div id="{{friend.username}}-status" class="status off">offline</div>
+		</div>
+	    </a></ul>
+	    {% endfor %}
+		<ul class="slide3"></ul>
+	</div>
+    </div>
+    <div id="chatBar">
+      <div id="chat-container">  
+        <a href="#" id="load-more" disabled="disabled">
+            <div class="chat-header">
+                Load more...
+            </div>
+        </a>
+        <div class="chat-content" id="chat-area">
+        	<ul id="chat-content" class="chat-content">  
+  			</ul>  
+  		</div>
+        	<form id="chatForm">{% csrf_token %}
+            	<input disabled="disabled" id="text-send" name="content" type="text" placeholder="Send Message..."  autocomplete="off" onkeydown='if(event.keyCode==13){$("#chatForm").gosubmit}'>  
+            	<input type="hidden" id="receiver" name="receiver" value=""/>
+            	<input type="hidden" name="post_type" value="send_chat"/>
+            	<input disabled="disabled" id="send-button" type="submit" class="send" value="Send"/>
+        	</form>
+      </div>  
+	</div>
+	<div id="right-bar">
+		<div id="First-info" class="user-info">
+			<a href="./logout"><img src="{% static "icon/profle.png"%}"></a>
+			<h1>hello, <span>..</span> !</h1>
+			<p>Start chatting with Friends</p>
+            <a id="f-info" href="javascript:void(0)" onclick = "document.getElementById('f-info-w').style.display='block';document.getElementById('fade').style.display='block'"><img class="f-icon" src='{% static "icon/aperture.png"%}'></a>
+            <a id="f-move" href="javascript:void(0)" onclick = "document.getElementById('f-move-w').style.display='block';document.getElementById('fade').style.display='block'"><img class="f-icon" src='{% static "icon/stack.png"%}'></a>
+            <a id="f-delete" href="javascript:void(0)" onclick = "document.getElementById('f-delete-w').style.display='block';document.getElementById('fade').style.display='block'"><img class="f-icon" src='{% static "icon/cart.png"%}'></a>
+		</div>
+		<div id="Second-info" class="user-info">
+			<img src='{% static "images/"%}{{request.user.username}}.png'>
+			<h1>Hello, <div><span>{{request.user.username}}</span> !</h1>
+            <a id="i-info" href="javascript:void(0)" onclick = "document.getElementById('i-info-w').style.display='block';document.getElementById('fade').style.display='block'"><img class="f-icon" src='{% static "icon/tools.png"%}'></a>
+            <a id="i-add" href="javascript:void(0)" onclick = "document.getElementById('i-add-w').style.display='block';document.getElementById('fade').style.display='block'"><img class="f-icon" src='{% static "icon/zoomin.png"%}'></a>
+            <a id="i-upload" href="javascript:void(0)" onclick = "document.getElementById('i-upload-w').style.display='block';document.getElementById('fade').style.display='block'"><img class="f-icon" src='{% static "icon/videocameracompact.png"%}'></a>
+		</div>
+	</div>
+</div>
+
+<div id="f-info-w" class="white_content">
+这是一个层窗口示例程序.
+<a href = "javascript:void(0)" onclick = "document.getElementById('f-info-w').style.display='none';document.getElementById('fade').style.display='none'">点这里关闭本窗口</a>
+</div>
+
+<div id="f-move-w" class="white_content">
+这是一个层窗口示例程序.
+<a href = "javascript:void(0)" onclick = "document.getElementById('f-move-w').style.display='none';document.getElementById('fade').style.display='none'">点这里关闭本窗口</a>
+</div>
+
+
+<div id="f-delete-w" class="white_content">
+这是一个层窗口示例程序.
+<a href = "javascript:void(0)" onclick = "document.getElementById('f-delete-w').style.display='none';document.getElementById('fade').style.display='none'">点这里关闭本窗口</a>
+</div>
+
+
+<div id="i-info-w" class="white_content">
+这是一个层窗口示例程序.
+<a href = "javascript:void(0)" onclick = "document.getElementById('i-info-w').style.display='none';document.getElementById('fade').style.display='none'">点这里关闭本窗口</a>
+</div>
+
+<div id="i-add-w" class="white_content">
+这是一个层窗口示例程序.
+<a href = "javascript:void(0)" onclick = "document.getElementById('i-add-w').style.display='none';document.getElementById('fade').style.display='none'">点这里关闭本窗口</a>
+</div>
+
+<div id="i-upload-w" class="white_content">
+这是一个层窗口示例程序.
+<a href = "javascript:void(0)" onclick = "document.getElementById('i-upload-w').style.display='none';document.getElementById('fade').style.display='none'">点这里关闭本窗口</a>
+</div>
+
+<div id="fade" class="black_overlay"></div> 
+</body>
+
+{% else %}
+<link rel="stylesheet" href="{% static "css/style.css" %}"/>
+<body>
+<div class="container">
+	 <h1>Giant Fish</h1>
+	 <h2 style="text-align:center;"><strong>Error</strong></h2>
+     <div class="contact-form">
+	 <div class="signin">
+     	<h1 style="margin-top:-20px">Please Login First!</h1>
+     	<a href="{% url 'login' %}">Jump to Login</a>
+	 </div>
+	 </div>
+</div>
+<div class="myfooter">
+     <p>Copyright &copy; 2015 User Icon Login Form. All Rights Reserved | Design by <a href="http://www.moke8.com/" target="_blank">moke8</a></p>
+</div>
+</body>
+{% endif %}
+</html>

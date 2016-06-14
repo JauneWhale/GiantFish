@@ -1,0 +1,70 @@
+{% extends 'login_base.html' %}
+
+{% block webtittle %}
+<title>New User Register - Giant Fish</title>
+{% endblock %}
+
+
+{% block header%}
+
+<h2 style="text-align:center;"><strong>Regist</strong></h2>
+  {% if form.non_field_errors %}
+  <div class="messages">
+      {{ form.non_field_errors }}
+  </div>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+
+<a sytle="color=#ff0000" href="{% url 'login' %}">Have Account? Click here to login</a>
+<div class="regist-form">
+   <div class="signin">
+      <div style="height:270px; margin-top: -5%;">
+        <form class="regist" action="" method="post">{% csrf_token %}
+          <div class="infobox">
+              <label width="50px;" for="">{{ form.username.label }}</label>
+              {{ form.username }}
+            {% if form.username.errors %}
+            {{ form.username.errors }}
+            {% endif %}
+            <!--<p style="text-align:left;">{{ form.username.help_text }}</p>-->
+          </div>
+
+          <div class="infobox">
+              <label for="">{{ form.email.label }}</label>
+              {{ form.email }}
+            {% if form.email.errors %}
+            {{ form.email.errors }}
+            {% endif %}
+            <!--<p class="text-muted">{{ form.email.help_text }}</p>-->
+          </div>
+          
+          <div class="infobox">
+            <label for="">{{ form.password.label }}</label>
+            {{ form.password }}
+            {% if form.password.errors %}
+            {{ form.password.errors }}
+            {% endif %}
+            <!--<p class="text-muted">{{ form.password.help_text }}</p>-->
+          </div>
+          
+          <div class="infobox">
+            <label for="">{{ form.confirm_password.label }}</label>
+            {{ form.confirm_password }}
+            {% if form.confirm_password.errors %}
+            <p>{{ form.confirm_password.errors }}</p>
+            {% endif %}
+          </div>
+          <input type="submit" value="Sign up now!">
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+
+{% block script %}
+<script type="text/javascript">
+</script>
+{% endblock %}
