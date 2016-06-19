@@ -211,7 +211,7 @@ html,body {
 
 #slidebar1{
 	width:100%;
-	background-color: #242b32;*/
+	background-color: #242b32;
 	/*border-right:3px solid #999;*/
 	float: left;
 	position: relative;
@@ -276,6 +276,7 @@ html,body {
     color: #666;
 }   
 #chatForm {    
+    font-family: "Nunito-Bold","文泉驿等宽微米黑","微软雅黑";
     height: 45px;   
   background: #eee;
     position: relative;   
@@ -486,6 +487,7 @@ html,body {
   margin-top: 12px;
 }
 .status {
+  font-family: 'Nunito-Bold';
   font-size: 0.8em;
   position: relative;
   margin-left: 14px;
@@ -754,23 +756,222 @@ i.beh {
     opacity:.80; 
     filter: alpha(opacity=88); 
 } 
-.white_content { 
+.bubble_1 { 
+    font-family: 'Nunito-Bold';
     display: none; 
     border-radius: 5px;
     box-shadow: 0 0 25px #3a9fc4;
     position: absolute; 
     top: 15%; 
-    left: 25%; 
-    width: 55%; 
+    left: 30%; 
+    width: 35%; 
     height: 55%; 
     padding: 20px; 
     background-color: white; 
     z-index:1002; 
     overflow: auto; 
+  background-image:  url("images/bg2.png");
+  background-size:  110%  auto;
+  background-color:  #eee;
+  /*background-repeat: no-repeat;background-position: right top;*/
 } 
+
+.b-1 h2{
+  color:#364050;
+  float: left;
+  margin-top:-0.1em;
+}
 
 img.f-icon{
     width: 60px;
     height: 60px;
     margin: 0 auto;
+}
+
+.exit{
+  text-align: center;
+  text-decoration: none;
+  float: right;
+  width: 1.5em;
+  height: 1.35em;
+  font-size: 85%;
+  border-radius: 0.5em;
+  color: #fff;
+  background-color:#d9534f;
+  font-family: 'Nunito-Bold';
+}
+
+.b-1{
+  width: 100%;
+  height: 10%;
+}
+
+.b-2{
+  float:left;
+  width: 35%;
+  height: 55%;
+
+}
+
+.b-2 img{
+  align-self: center; 
+  margin-top:2em;
+  margin-left: 20%;
+  height:80%;
+  width: height;
+}
+
+.b-3{
+  margin-left:1.5em;
+  float:right;
+  width: 40%;
+  height: 60%;
+}
+
+.b-3 h2{
+  color: #00cfbd;
+}
+
+.b-3 p{
+  margin-left: 1em;
+}
+
+.b-4{
+  margin-left:1.5em;
+  float:right;
+  width: 100%;
+  height: 60%;
+}
+
+.b-4 select{
+    font-family: 'Nunito-Bold';
+    color: #555;
+    font-size:1.2em;
+    margin-top:  0.8em;
+    margin-left: 5%;
+    width:90%;
+
+    background-color: #fff;
+    border: none;
+    border-radius: 5px;
+}
+
+.b-4 input{
+    font-family: 'Nunito-Bold';
+    color: #555;
+    font-size:1.2em;
+    margin-top:  0.8em;
+    margin-left: 3%;
+    margin-bottom: 0;
+    width:90%;
+    background-image: none;
+    background-color: #fff;
+    border: none;
+    border-radius: 5px;
+}
+
+.b-4 p{
+    font-family: 'Nunito-Bold';
+    color: #555;
+    font-size:1.2em;
+    margin-top:  0.8em;
+    margin-left: 5%;
+    margin-bottom: 0;
+    width:90%;
+}
+
+.bubble_2 { 
+    font-family: 'Nunito-Bold';
+    display: none; 
+    border-radius: 5px;
+    box-shadow: 0 0 25px #3a9fc4;
+    position: absolute; 
+    top: 15%; 
+    left: 30%; 
+    width: 35%; 
+    height: 25%; 
+    padding: 20px; 
+    background-color: white; 
+    z-index:1002; 
+    overflow: auto; 
+  background-image:  url("images/bg2.png");
+  background-size:  110%  auto;
+  background-color:  #eee;
+  /*background-repeat: no-repeat;background-position: right top;*/
+} 
+
+.ok{
+    font-family: 'Nunito-Bold';
+    width: 45%;
+    height:  31px;
+    margin: 8% 0  0 3%; 
+    background: #44C644;
+    float: left;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 20px;
+}
+.ok:hover{
+    background: #099E84;
+}
+
+.cancel{
+    font-family: 'Nunito-Bold';
+    width: 45%;
+    height:  31px;
+    margin: 8% 0 0 4%;
+    background: #C64444;
+    float: left;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 20px;
+}
+
+
+.cancel:hover{
+    background: #099E84;
+}
+
+
+.b-4 input.upload{
+    font-family: 'Nunito-Bold';
+    width: 90%;
+    height:  31px;
+    background: #fff;
+    float: left;
+    border: none;
+    color: #555;
+    font-size: 20px;
+}
+.b-4 input.upload:hover{
+    background: #099E84;
+    color: white;
+}
+
+.b-4 input[id="upfile"]{
+    width: 75%;
+    color: #999;
+}
+
+.b-4 input[type="button"]{
+    width: 10%;
+    background: #099E84;
+    color: white;
+}
+
+.b-4 input[type="button"]:hover{
+    background: #099E84;
+    color: white;
+}
+
+#edit-group-footer{
+  float: left;
+   height: 80px;
+   padding-top:8px; 
+   padding-left:5px; 
+   width: 100%;
+  background-color: #242b32;
+    background-image: url("images/bg1.png");
 }

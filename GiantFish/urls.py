@@ -27,5 +27,7 @@ urlpatterns = [
     url(r'^', include('django.contrib.auth.urls')),
     url(r'^register/$', RegisterView.as_view(), name='register'),
     url(r'^post/$', chat_views.post),
+    url(r'^command/$', chat_views.command),
+    url(r'^upload_img/$',chat_views.upload_file),
     # url(r'^accounts/', include('users.urls')),
 ]

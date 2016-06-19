@@ -37,12 +37,23 @@ def index(request):
         groups = get_groupname(groups_object)
         friends = load_friend(groups_object[groups.index("Friend")])
         pregroup = "Friend"
-    # Render it
+        info = UserInfo.objects.get(username=request.user)
+        usig = info.signature
+        if info.gender != 'N':
+            if info.gender == 'F':
+                ugender = "Girl"
+            else:
+                ugender = "Boy"
+        else:
+            ugender = "Secret"
+        # Render it
     return render(request, 'index.html', {
         'request': request,
         'groups': groups,
         'friends': friends,
         'pregroup': pregroup,
+        'ugender' : ugender,
+        'usig' : usig,
     })
 
 
@@ -55,6 +66,8 @@ def post(request):
         status.setDaemon(True)
         status.start()
         HasOpened = True
+        if request.user.is_authenticated():
+            status.add_active_user(request.user)
     if request.method == 'POST':
         post_type = request.POST.get('post_type')
 
@@ -101,6 +114,7 @@ def post(request):
 
         # click some user to begin chatting
         elif post_type == 'begin_chat':
+            res = {}
             if request.user.is_authenticated():
                 status.add_active_user(request.user)
             # Obtain the information of the request
@@ -132,8 +146,8 @@ def post(request):
             last_chat = Chat.objects.filter(Q(sender=receiver, receiver=sender) | Q(sender=sender, receiver=receiver))
             chats = list(last_chat.order_by('id'))[-chat_num:]
             # Change to JSON
-            res = ListtoJSON(chats)
-            logging.debug(res)
+            res["chat"] = ListtoJSON(chats)
+            res["info"] = ChattoJSON(UserInfo.objects.get(username=receiver))
             # return HttpResponse()
             return JsonResponse(res)
 
@@ -204,3 +218,80 @@ def post(request):
             # return JsonResponse([friends, groups], safe=False)
     else:
         raise Http404
+
+
+
+@csrf_exempt
+def command(request):
+    # Obtain the controller
+    status = Status()
+    user = request.user
+    global HasOpened
+    if not HasOpened:
+        status.setDaemon(True)
+        status.start()
+        HasOpened = True
+        if request.user.is_authenticated():
+            status.add_active_user(request.user)
+    if request.method == 'POST':
+        command_type = request.POST.get('command_type')
+        # sending chat content to others
+        if command_type == 'delete_friend':
+            friend = User.objects.get(username=request.POST.get('friend'))
+            df = FriendRelation.objects.get(Q(u1_name=request.user, u2_name=friend) | Q(u1_name=friend, u2_name=request.user))
+            df.delete()
+            return HttpResponse(1)
+        elif command_type == 'search_friend':
+            return HttpResponse(1)
+        elif command_type == 'add_friend':
+            friend = User.objects.get(username=request.POST.get('friend'))
+            # status set ###############################
+            return HttpResponse(1)
+        elif command_type == 'move_friend':
+            friend = User.objects.get(username=request.POST.get('friend'))
+            group = Group.objects.get(username=request.user, group_name=request.POST.get('group'))
+            df = FriendRelation.objects.get(Q(u1_name=request.user, u2_name=friend) | Q(u1_name=friend, u2_name=request.user))
+            if df.u1_name == request.user:
+                df.u1_group = group
+            else:
+                df.u2_group = group
+            df.save()
+            return HttpResponse(1)
+        elif command_type == 'add_group':
+            if len(Group.objects.filter(username=request.user, group_name=request.POST.get('group'))) == 0:
+                Group.objects.create(username=request.user, group_name=request.POST.get('group'))
+                return HttpResponse(1)
+            else:
+                return HttpResponse(0)
+        elif command_type == 'delete_group':
+            group = Group.objects.filter(username=request.user, group_name=request.POST.get('group'))
+            tgroup = Group.objects.filter(username=request.user, group_name=request.POST.get('tgroup'))
+            print group
+            if len(group) != 0 and len(tgroup) != 0 and group != tgroup:
+                fl = FriendRelation.objects.filter(u1_name=request.user, u1_group=group[0])
+                for f in fl:
+                    f.u1_group = tgroup[0]
+                    f.save()
+                fl = FriendRelation.objects.filter(u2_name=request.user, u2_group=group[0])
+                for f in fl:
+                    f.u2_group = tgroup[0]
+                    f.save()
+                group[0].delete()
+                return HttpResponse(1)
+            else:
+                return HttpResponse(0)
+        elif command_type == 'upload_img':
+            return HttpResponse(0)
+    else:
+        raise Http404
+
+
+def upload_file(request):
+    if request.method == 'POST':
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            handle_uploaded_file(request.FILES['file'])
+            return HttpResponseRedirect('/success/url')
+    else:
+        form = UploadFileForm()
+    return render_to_response('upload.html', {'form': form})

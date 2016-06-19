@@ -203,7 +203,7 @@ a:hover {
     cursor: pointer;
     outline: none;
 }
-#sign-in :hover {
+#sign-in:hover {
     background: #099E84;
     -webkit-transition: all 0.5s ease-in-out;
     -moz-transition: all 0.5s ease-in-out;
@@ -229,7 +229,7 @@ a:hover {
     cursor: pointer;
     outline: none;
 }
-#sign-up :hover {
+#sign-up:hover {
     text-decoration:none;
     background: #099E84;
     -webkit-transition: all 0.5s ease-in-out;

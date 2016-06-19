@@ -28,12 +28,15 @@ $(document).ready(function() {
     if(width<minwidth){
     	width=minwidth;
     }
+    $('.bubble_1').css('width',width*0.40);
+    $('.bubble_2').css('width',width*0.40);
+    $('#fade').css('width',  width); 
     $('#mainContainer').css('width',  width*0.95); 
     $('#friendBar1').css('height', height-80);     
     $('#friendBar2').css('height', height-80);     
     $('#chatBar').css('height', height-80-6);         
     $('#chatBar').css('width',  width-sb1-sb2-sb3); 
-    $('#slidebar1').css('height', height-37-170);     
+    $('#slidebar1').css('height', height-37-170-80);     
     $('#slidebar2').css('height', height-80);      
     $('div.chat-content').css('height',height-80-20-45-8);
     $('#text-send').css('width',width-sb1-sb2-sb3-120);
@@ -93,19 +96,27 @@ $(document).ready(function() {
                     {   chatter: chatter,
                         post_type: "begin_chat"
                     },
-                    function(data){
+                    function(res){
+                        var data = res["chat"];
                         document.getElementById('chat-content').innerHTML = ""; 
                         for(var i in data){
                             send = (data[i].sender==chatter)?0:1;
                             //console.debug(data[i].sender);
-                            print_chat_content(data[i],send)
+                            print_chat_content(data[i],send);
                         }
+                        data = res["info"];
+                        document.getElementById("fi-1-gender").innerHTML = (data["gender"]!='N')?((data["gender"]=='F')?"Girl":"Boy"):"Secret";
+                        document.getElementById("fi-1-desc").innerHTML = data["signature"];
                     },
                     'json'
                     );
                     var info = document.getElementById("First-info");
                     info.getElementsByTagName("img")[0].setAttribute('src','{% static "images/"%}'+chatter+'.png');        
                     info.getElementsByTagName("span")[0].innerHTML = chatter;
+                    document.getElementById("fi-1-img").setAttribute('src','{% static "images/"%}'+chatter+'.png');     
+                    document.getElementById("fi-1-name").innerHTML = chatter;
+
+                    document.getElementById("f-delete-name").innerHTML = chatter;
                     //info.getElementsByTagName("p")[0].setAttribute('src','{% static "images/"%}'+chatter+'.png');
                 });
 			},
@@ -130,20 +141,28 @@ $(document).ready(function() {
             {   chatter: chatter,
                 post_type: "begin_chat"
             },
-            function(data){
+            function(res){
+                var data = res["chat"];
                 document.getElementById('chat-content').innerHTML = ""; 
                 for(var i in data){
                     send = (data[i].sender==chatter)?0:1;
                     //console.debug(data[i].sender);
-                    print_chat_content(data[i],send)
+                    print_chat_content(data[i],send);
                 }
+                data = res["info"];
+                document.getElementById("fi-1-gender").innerHTML = (data["gender"]!='N')?((data["gender"]=='F')?"Girl":"Boy"):"Secret";
+                document.getElementById("fi-1-desc").innerHTML = data["signature"];
             },
             'json'
         );
-
         var info = document.getElementById("First-info");
         info.getElementsByTagName("img")[0].setAttribute('src','{% static "images/"%}'+chatter+'.png');        
         info.getElementsByTagName("span")[0].innerHTML = chatter;
+        info = document.getElementById("fi-1-img");
+        info.setAttribute('src','{% static "images/"%}'+chatter+'.png');     
+        info = document.getElementById("fi-1-name");
+        info.innerHTML = chatter;
+        document.getElementById("f-delete-name").innerHTML = chatter;
         //info.getElementsByTagName("p")[0].setAttribute('src','{% static "images/"%}'+chatter+'.png');
     });
     $('#load-more').bind("click",function(){
@@ -195,12 +214,15 @@ $(window).resize(function() {
     if(width<minwidth){
     	width=minwidth;
     }
+    $('.bubble_1').css('width',width*0.40);
+    $('.bubble_2').css('width',width*0.40);
+    $('#fade').css('width',  width); 
     $('#mainContainer').css('width',  width*0.95); 
     $('#friendBar1').css('height', height-80);     
     $('#friendBar2').css('height', height-80);     
     $('#chatBar').css('height', height-80-6);         
     $('#chatBar').css('width',  width-sb1-sb2-sb3); 
-    $('#slidebar1').css('height', height-37-170);     
+    $('#slidebar1').css('height', height-37-170-80);     
     $('#slidebar2').css('height', height-80);      
     $('div.chat-content').css('height',height-80-20-50-8);
     $('#text-send').css('width',width-sb1-sb2-sb3-120);
@@ -376,6 +398,93 @@ $(function() {
     }); 
 });  
 
+function error_pop(){
+
+};
+
+function move_friend(){ 
+    document.getElementById('f-move-w').style.display='none';
+    document.getElementById('fade').style.display='none';
+    var friend = document.getElementById('receiver').value;
+    var group = document.getElementById('fi-move-select').value;
+    $.post("./command/",
+            {  friend:friend, 
+                group: group,
+                command_type: "move_friend"
+            },
+            function(data){
+                if(data==1)
+                    history.go(0) 
+                else
+                    error_pop();
+            },
+            'json'
+        );
+};
+
+function delete_friend(){
+    document.getElementById('f-delete-w').style.display='none';
+    document.getElementById('fade').style.display='none';
+    var friend = document.getElementById('receiver').value;
+    $.post("./command/",
+            {  friend:friend, 
+                command_type: "delete_friend"
+            },
+            function(data){
+                if(data==1)
+                    history.go(0) 
+                else
+                    error_pop();
+            },
+            'json'
+        );
+};
+
+function search_friend(){
+
+};
+
+function add_group(){
+    document.getElementById('i-ag-w').style.display='none';
+    document.getElementById('fade').style.display='none';
+    var group = document.getElementById('my-add-group').value;
+    $.post("./command/",
+            {  group:group, 
+                command_type: "add_group"
+            },
+            function(data){
+                console.log(data);
+                if(data==1)
+                    history.go(0) 
+                else
+                    error_pop();
+            },
+            'json'
+        );
+};
+
+function delete_group(){
+    document.getElementById('i-dg-w').style.display='none';
+    document.getElementById('fade').style.display='none';
+    var group = document.getElementById('my-delete-group').value;
+    var tgroup = document.getElementById('my-move-group').value;
+    $.post("./command/",
+            {  group:group, 
+                tgroup: tgroup,
+                command_type: "delete_group"
+            },
+            function(data){
+                console.log(data);
+                if(data==1)
+                    history.go(0) 
+                else
+                    error_pop();
+            },
+            'json'
+        );
+
+}
+
 
 /*]]>*/</script>
 </head>
@@ -396,6 +505,10 @@ $(function() {
 	    {% endif %}
 	    {% endfor %}
 	</div>
+    <div id="edit-group-footer">
+        <a id="i-mg" href="javascript:void(0)" onclick = "document.getElementById('i-ag-w').style.display='block';document.getElementById('fade').style.display='block'"><img class="f-icon" src='{% static "icon/truck.png"%}'></a>
+        <a id="i-dg" href="javascript:void(0)" onclick = "document.getElementById('i-dg-w').style.display='block';document.getElementById('fade').style.display='block'"><img class="f-icon" src='{% static "icon/x.png"%}'></a>
+    </div>
     </div>
     <div id="friendBar2">
 		<form action="#" class="search">
@@ -442,9 +555,9 @@ $(function() {
 			<a href="./logout"><img src="{% static "icon/profle.png"%}"></a>
 			<h1>hello, <span>..</span> !</h1>
 			<p>Start chatting with Friends</p>
-            <a id="f-info" href="javascript:void(0)" onclick = "document.getElementById('f-info-w').style.display='block';document.getElementById('fade').style.display='block'"><img class="f-icon" src='{% static "icon/aperture.png"%}'></a>
-            <a id="f-move" href="javascript:void(0)" onclick = "document.getElementById('f-move-w').style.display='block';document.getElementById('fade').style.display='block'"><img class="f-icon" src='{% static "icon/stack.png"%}'></a>
-            <a id="f-delete" href="javascript:void(0)" onclick = "document.getElementById('f-delete-w').style.display='block';document.getElementById('fade').style.display='block'"><img class="f-icon" src='{% static "icon/cart.png"%}'></a>
+            <a id="f-info" href="javascript:void(0)" onclick = "if(document.getElementById('receiver').value!=''){document.getElementById('f-info-w').style.display='block';document.getElementById('fade').style.display='block';}"><img class="f-icon" src='{% static "icon/aperture.png"%}'></a>
+            <a id="f-move" href="javascript:void(0)" onclick = "if(document.getElementById('receiver').value!=''){document.getElementById('f-move-w').style.display='block';document.getElementById('fade').style.display='block'}"><img class="f-icon" src='{% static "icon/stack.png"%}'></a>
+            <a id="f-delete" href="javascript:void(0)" onclick = "if(document.getElementById('receiver').value!=''){document.getElementById('f-delete-w').style.display='block';document.getElementById('fade').style.display='block'}"><img class="f-icon" src='{% static "icon/cart.png"%}'></a>
 		</div>
 		<div id="Second-info" class="user-info">
 			<img src='{% static "images/"%}{{request.user.username}}.png'>
@@ -456,40 +569,159 @@ $(function() {
 	</div>
 </div>
 
-<div id="f-info-w" class="white_content">
-这是一个层窗口示例程序.
-<a href = "javascript:void(0)" onclick = "document.getElementById('f-info-w').style.display='none';document.getElementById('fade').style.display='none'">点这里关闭本窗口</a>
+<!--Friend infomation/-->
+<div id="f-info-w" class="bubble_1">
+    <div class="b-1">
+        <h2>Infomation Card~</h2>
+        <a href = "javascript:void(0)"  class="exit" onclick = "document.getElementById('f-info-w').style.display='none';document.getElementById('fade').style.display='none'">X</a>
+    </div>
+    <br>
+    <div class="b-2">
+        <img id="fi-1-img" src='{% static "icon/profle.png"%}'>
+    </div>
+    <div class="b-3">
+        <h2>Name:</h2> <p id="fi-1-name"></p>
+        <h2>Gender:</h2><p id="fi-1-gender"></p>
+        <h2>Description: </h2><p id="fi-1-desc"></p>
+    </div> 
 </div>
 
-<div id="f-move-w" class="white_content">
-这是一个层窗口示例程序.
-<a href = "javascript:void(0)" onclick = "document.getElementById('f-move-w').style.display='none';document.getElementById('fade').style.display='none'">点这里关闭本窗口</a>
+<!--Move the friend to another group/-->
+<div id="f-move-w" class="bubble_2">
+    <div class="b-1">
+        <h2>Move to Another Group~</h2>
+        <a href = "javascript:void(0)"  class="exit" onclick = "document.getElementById('f-move-w').style.display='none';document.getElementById('fade').style.display='none'">X</a>
+    </div>
+    <br>
+    <div class="b-4">
+        <select id="fi-move-select">
+        {% for group in groups %}
+        {%if group == pregroup%} 
+            <option value ="{{group}}" selected="selected">{{group}}</option>
+        {% else %} 
+            <option value ="{{group}}">{{group}}</option>
+        {% endif %}
+        {% endfor %}
+        </select>
+        <button id="O-1" class="ok" onclick="move_friend()">Ok</button>
+        <button id="c-1" class="cancel" onclick = "document.getElementById('f-move-w').style.display='none';document.getElementById('fade').style.display='none'">Cancel</button>
+    </div>
+</div>
+
+<!--Delete the friend/-->
+<div id="f-delete-w" class="bubble_2">
+    <div class="b-1">
+        <h2>Do you really want to DELETE?</h2>
+        <a href = "javascript:void(0)"  class="exit" onclick = "document.getElementById('f-delete-w').style.display='none';document.getElementById('fade').style.display='none'">X</a>
+    </div>
+    <br>
+    <div class="b-4">
+        <p>Sure to unfriend with <span id="f-delete-name" style="
+  color: #00cfbd;"></span>?</p>
+        <button id="O-2" onclick="delete_friend()" class="ok">Yes</button>
+        <button id="c-2" class="cancel" onclick = "document.getElementById('f-delete-w').style.display='none';document.getElementById('fade').style.display='none'">Cancel</button>
+    </div>
+</div>
+
+<!--User infomation/-->
+<div id="i-info-w" class="bubble_1">
+    <div class="b-1">
+        <h2>Infomation Card~</h2>
+        <a href = "javascript:void(0)"  class="exit" onclick = "document.getElementById('i-info-w').style.display='none';document.getElementById('fade').style.display='none'">X</a>
+    </div>
+    <br>
+    <div class="b-2">
+        <img id="my-1" class="fi-1" src='{% static "images/"%}{{request.user.username}}.png'>
+    </div>
+    <div class="b-3">
+        <h2>Name:</h2> <p id="fi-1-name">{{request.user.username}}</p>
+        <h2>Gender:</h2><p id="fi-1-gender">{{ugender}}</p>
+        <h2>Description: </h2><p id="fi-1-desc">{{usig}}</p>
+    </div> 
+</div>
+
+<!--Add new Friend/-->
+<div id="i-add-w" class="bubble_2 ">
+    <div class="b-1">
+        <h2 >Add a new Friend~</h2>
+        <a href = "javascript:void(0)"  class="exit" onclick = "document.getElementById('i-add-w').style.display='none';document.getElementById('fade').style.display='none'">X</a>
+    </div>
+    <br>
+    <div class="b-4">
+        <input id="my-add-friend" placeholder="Input Name to search">
+        <button id="O-1" class="ok" onclick="search_friend()" >Search</button>
+        <button id="c-1" class="cancel" onclick = "document.getElementById('i-add-w').style.display='none';document.getElementById('fade').style.display='none'">Cancel</button>
+    </div>
+</div>
+
+<!--Add new Group/-->
+<div id="i-ag-w" class="bubble_2 ">
+    <div class="b-1">
+        <h2 >Add a new Group~</h2>
+        <a href = "javascript:void(0)"  class="exit" onclick = "document.getElementById('i-ag-w').style.display='none';document.getElementById('fade').style.display='none'">X</a>
+    </div>
+    <br>
+    <div class="b-4">
+        <input id="my-add-group" placeholder="Input New Group Name">
+        <button id="O-1" class="ok" onclick="add_group()">Add</button>
+        <button id="c-1" class="cancel" onclick = "document.getElementById('i-ag-w').style.display='none';document.getElementById('fade').style.display='none'">Cancel</button>
+    </div>
 </div>
 
 
-<div id="f-delete-w" class="white_content">
-这是一个层窗口示例程序.
-<a href = "javascript:void(0)" onclick = "document.getElementById('f-delete-w').style.display='none';document.getElementById('fade').style.display='none'">点这里关闭本窗口</a>
+<!--delete Group/-->
+<div id="i-dg-w" class="bubble_1">
+    <div class="b-1">
+        <h2>Delete and move friends to ...</h2>
+        <a href = "javascript:void(0)"  class="exit" onclick = "document.getElementById('i-dg-w').style.display='none';document.getElementById('fade').style.display='none'">X</a>
+    </div>
+    <br>
+    <div class="b-4">
+        <br></br>
+        Delete:
+        <select id="my-delete-group">
+        {% for group in groups %}
+        {% if group != "Friend" %}
+            <option value ="{{group}}">{{group}}</option>
+        {% endif %}
+        {% endfor %}
+        </select>
+        <br></br>
+        Move to:
+        <select id="my-move-group">
+        {% for group in groups %}
+            <option value ="{{group}}">{{group}}</option>
+        {% endfor %}
+        </select>
+        <button id="O-2" class="ok" onclick="delete_group()">Ok</button>
+        <button id="c-2" class="cancel" onclick = "document.getElementById('i-dg-w').style.display='none';document.getElementById('fade').style.display='none'">Cancel</button>
+    </div>
 </div>
 
-
-<div id="i-info-w" class="white_content">
-这是一个层窗口示例程序.
-<a href = "javascript:void(0)" onclick = "document.getElementById('i-info-w').style.display='none';document.getElementById('fade').style.display='none'">点这里关闭本窗口</a>
-</div>
-
-<div id="i-add-w" class="white_content">
-这是一个层窗口示例程序.
-<a href = "javascript:void(0)" onclick = "document.getElementById('i-add-w').style.display='none';document.getElementById('fade').style.display='none'">点这里关闭本窗口</a>
-</div>
-
-<div id="i-upload-w" class="white_content">
-这是一个层窗口示例程序.
-<a href = "javascript:void(0)" onclick = "document.getElementById('i-upload-w').style.display='none';document.getElementById('fade').style.display='none'">点这里关闭本窗口</a>
+<!--Upload new portrait/-->
+<div id="i-upload-w" class="bubble_2">
+    <div class="b-1">
+        <h2 >Upload a new portrait~</h2>
+        <a href = "javascript:void(0)"  class="exit" onclick = "document.getElementById('i-upload-w').style.display='none';document.getElementById('fade').style.display='none'">X</a>
+    </div>
+    <br>
+    <div class="b-4">
+        <form action="" method="post" enctype="multipart/form-data">
+        <!-- MAX_FILE_SIZE will parsed before your script runs ... -->
+            <input readonly="readonly"  type="text"  size="20" name="upfile" id="upfile" style="border:1px dotted #ccc" value="Choose a image to upload">  
+            <input type="button" value="..." onclick="path.click()" >  
+            <input type="file" id="path" style="display:none"  onchange="upfile.value=this.value"  accept=".png,.jpg,.bmp">
+            <input type="hidden" name="MAX_FILE_SIZE" value="300000" />
+            <input type="submit" class="upload" value="Upload" />
+        </form>
+    </div>
 </div>
 
 <div id="fade" class="black_overlay"></div> 
 </body>
+
+
+
 
 {% else %}
 <link rel="stylesheet" href="{% static "css/style.css" %}"/>
