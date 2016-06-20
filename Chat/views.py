@@ -1,15 +1,13 @@
 from django.shortcuts import render, Http404
 
 # Create your views here.
-from django.http import HttpResponse
-from django import forms
-from django.views.decorators.csrf import csrf_protect,csrf_exempt
+from django.http import HttpResponse, HttpResponseRedirect
+from django.contrib.auth import logout
+from django.views.decorators.csrf import csrf_exempt
 from Manager.manager import *
 from django.http import JsonResponse
 from django.db.models import Q
 from Manager.status import *
-from django.template import RequestContext
-from django.core import serializers
 import logging
 import json
 
@@ -30,6 +28,8 @@ def index(request):
     groups = []
     friends = []
     pregroup = ""
+    ugender = ""
+    usig = ""
     if request.user.is_authenticated():
         status.add_active_user(request.user)
         # load the group info and the friend in Group Friend name
@@ -68,6 +68,11 @@ def post(request):
         HasOpened = True
         if request.user.is_authenticated():
             status.add_active_user(request.user)
+    if not request.user.is_authenticated():
+        return HttpResponse(3)
+    if status.active_user[request.user.username].rest == 0:
+        logout(request)
+        return HttpResponse(3)
     if request.method == 'POST':
         post_type = request.POST.get('post_type')
 
@@ -174,8 +179,8 @@ def post(request):
             else:
                 res['msg_type'] = msg.msg_type
                 res['sender'] = msg.sender
-                res['receiver'] = msg.receiver
-                res['content'] = msg.cotent
+                res['content'] = msg.content
+                logging.debug(res)
                 return JsonResponse(res)
 
         # scraping NEW state of your fiends, including
@@ -220,7 +225,6 @@ def post(request):
         raise Http404
 
 
-
 @csrf_exempt
 def command(request):
     # Obtain the controller
@@ -231,8 +235,15 @@ def command(request):
         status.setDaemon(True)
         status.start()
         HasOpened = True
-        if request.user.is_authenticated():
-            status.add_active_user(request.user)
+    if request.user.is_authenticated():
+        status.add_active_user(request.user)
+    elif request.user.username not in status.active_user.keys():
+        status.add_user(request.user)
+    if not request.user.is_authenticated():
+        return HttpResponse(3)
+    if status.active_user[request.user.username].rest == 0:
+        logout(request)
+        return HttpResponse(3)
     if request.method == 'POST':
         command_type = request.POST.get('command_type')
         # sending chat content to others
@@ -240,13 +251,36 @@ def command(request):
             friend = User.objects.get(username=request.POST.get('friend'))
             df = FriendRelation.objects.get(Q(u1_name=request.user, u2_name=friend) | Q(u1_name=friend, u2_name=request.user))
             df.delete()
-            return HttpResponse(1)
-        elif command_type == 'search_friend':
-            return HttpResponse(1)
+            msg = UserMessage(request.user.username, "", MSG.FRIEND_DELETE)
+            if status.put_user_msg(request.POST.get('friend'), msg):
+                logging.debug(msg)
+                return HttpResponse(1)
+            return HttpResponse(0)
         elif command_type == 'add_friend':
             friend = User.objects.get(username=request.POST.get('friend'))
-            # status set ###############################
-            return HttpResponse(1)
+            condition = Q(u1_name=friend,u2_name=request.user) | Q(u1_name=request.user, u2_name=friend)
+            if len(FriendRelation.objects.filter(condition)) != 0:
+                return HttpResponse(0)
+            status = Status()
+            msg = UserMessage(request.user.username,  request.POST.get('remark'), MSG.FRIEND_REQUEST)
+            if status.put_user_msg(request.POST.get('friend'), msg):
+                logging.debug(msg)
+                return HttpResponse(1)
+            return HttpResponse(0)
+        elif command_type == 'search_friend':
+            res = {}
+            friend = User.objects.filter(username__contains=request.POST.get('friend'))
+            if len(friend) == 0:
+                res['res'] = 2
+                return JsonResponse(res)
+            else:
+                res['res'] = 1
+                ui = []
+                for i in list(friend)[:10]:
+                    if i.username != request.user.username:
+                        ui.append(UserInfo.objects.get(username=i))
+                res['data'] = ListtoJSON(ui)
+                return JsonResponse(res)
         elif command_type == 'move_friend':
             friend = User.objects.get(username=request.POST.get('friend'))
             group = Group.objects.get(username=request.user, group_name=request.POST.get('group'))
@@ -266,7 +300,6 @@ def command(request):
         elif command_type == 'delete_group':
             group = Group.objects.filter(username=request.user, group_name=request.POST.get('group'))
             tgroup = Group.objects.filter(username=request.user, group_name=request.POST.get('tgroup'))
-            print group
             if len(group) != 0 and len(tgroup) != 0 and group != tgroup:
                 fl = FriendRelation.objects.filter(u1_name=request.user, u1_group=group[0])
                 for f in fl:
@@ -280,18 +313,46 @@ def command(request):
                 return HttpResponse(1)
             else:
                 return HttpResponse(0)
-        elif command_type == 'upload_img':
+        elif command_type == 'accept_msg':
+            status = Status()
+            msg = UserMessage(request.user.username, "", MSG.FRIEND_ACCEPT)
+            friend = User.objects.get(username=request.POST.get("friend"))
+            f2 = Group.objects.get(username=request.user, group_name="Friend")
+            f1 = Group.objects.get(username=friend, group_name="Friend")
+            FriendRelation.objects.create(u1_name=friend, u1_group=f1, u2_name=request.user, u2_group=f2)
+            if status.put_user_msg(request.POST.get('friend'), msg):
+                logging.debug(msg)
+                return HttpResponse(1)
             return HttpResponse(0)
     else:
         raise Http404
 
 
+@csrf_exempt
 def upload_file(request):
-    if request.method == 'POST':
-        form = UploadFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            handle_uploaded_file(request.FILES['file'])
-            return HttpResponseRedirect('/success/url')
-    else:
-        form = UploadFileForm()
-    return render_to_response('upload.html', {'form': form})
+    # Obtain the controller
+    status = Status()
+    user = request.user
+    global HasOpened
+    if not HasOpened:
+        status.setDaemon(True)
+        status.start()
+        HasOpened = True
+    if request.user.is_authenticated():
+        status.add_active_user(request.user)
+    elif request.user.username not in status.active_user.keys():
+        status.add_user(request.user)
+    if status.active_user[request.user.username].rest == 0:
+        logout(request)
+    import Image
+    import time
+    photo = request.FILES.get('image', None)
+    logging.debug(request.FILES)
+    if photo:
+        phototime = request.user.username + str(time.time()).split('.')[0]
+        photo_last = str(photo).split('.')[-1]
+        photoname = '%s.%s' % (request.user.username, 'png')
+        img = Image.open(photo)
+        logging.debug(photoname)
+        img.save('static/images/' + photoname)
+    return HttpResponseRedirect("../")

@@ -18,9 +18,8 @@ MSG = enum(
 
 # Store the Information for the Friend Message, including sender, receiver, content and msg_type
 class UserMessage:
-    def __init__(self, sender, receiver, content, msg_type):
+    def __init__(self, sender, content, msg_type):
         self.sender = sender
-        self.receive = receiver
         self.content = content
         self.msg_type = msg_type
 
@@ -31,10 +30,10 @@ class UserMessage:
 #       active rest time ( to automatically kick the user outline )
 #       if new chat come
 class StatOfUser:
-    user_rest_time = 60/5
+    user_rest_time = 180/5
 
     def __init__(self, user):
-        self.msg = Queue.Queue(maxsize=10)
+        self.msg = Queue.Queue(maxsize=100)
         self.stat = True
         self.rest = self.user_rest_time
         self.user = user
@@ -49,6 +48,10 @@ class StatOfUser:
         tu = UserInfo.objects.get(username=self.user)
         tu.state = 'T'
         tu.save()
+
+    def user_offline(self):
+        self.stat = False
+        self.rest = 0
 
     def reduce_rest_time(self):
         if not self.stat:
@@ -77,8 +80,14 @@ class Status(threading.Thread):
         else:
             self.active_user[name].user_online()
 
+    def add_user(self, user):
+        name = user.username
+        if name not in self.active_user.keys():
+            self.active_user[name] = StatOfUser(user)
+            self.active_user[name].user_offline()
+
     def reduce_rest_time(self):
-        for i in self.active_user:
+        for i in self.active_user.keys():
             self.active_user[i].reduce_rest_time()
 
     def get_user_msg(self, name):
@@ -86,6 +95,15 @@ class Status(threading.Thread):
         if not user_msg_queue.empty():
             return user_msg_queue.get()
         return False
+
+    def put_user_msg(self, receiver, message):
+        if receiver not in self.active_user.keys():
+            self.active_user[receiver] = StatOfUser(User.objects.get(username=receiver))
+        user_msg_queue = self.active_user[receiver].msg
+        if user_msg_queue.full():
+            return False
+        user_msg_queue.put(message)
+        return True
 
     def add_unread_flag(self, user):
         name = user.username
@@ -101,9 +119,14 @@ class Status(threading.Thread):
             self.active_user[name].state = 'F'
         self.active_user[name].new_chat = False
 
+    def print_rest_time(self):
+        import logging
+        for i in self.active_user.keys():
+            logging.debug(self.active_user[i].rest)
+
     def run(self):
         while True:
             self.reduce_rest_time()
-            # print self.active_user
+            self.print_rest_time()
             sleep(5)
 

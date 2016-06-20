@@ -7,15 +7,15 @@ from django.contrib.auth.models import User
 
 from forms import RegisterForm
 from Chat.models import Group, UserInfo
-import logging
 
 
 # logout the user
 def logout_view(request):
-    tu = UserInfo.objects.get(username=request.user)
-    tu.state = 'F'
-    tu.save()
-    logout(request)
+    if request.user.is_authenticated():
+        tu = UserInfo.objects.get(username=request.user)
+        tu.state = 'F'
+        tu.save()
+        logout(request)
     return HttpResponseRedirect(reverse('login'))
 
 

@@ -27,9 +27,9 @@
 {% block content %}
 
      <div class="contact-form">
+<form method="post" action="{% url 'login' %}">
      <div class="signin">
 
-<form method="post" action="{% url 'login' %}">
 {% csrf_token %}
     {{ form.username }}
     {{ form.password }}
@@ -37,12 +37,12 @@
 {# Assumes you setup the password_reset view in your URLconf #}
 <p><a href="{% url 'password_reset' %}">Forgot Password?</a></p>
 
+</div>
 <input id="sign-in" type="submit" value="Sign In" />
-<a id="sign-up" href="{% url 'register' %}">Sign Up</a>
 
 <input type="hidden" name="next" value="{{ next }}" />
 </form>
-</div>
+<button id="sign-up" onclick="window.location.href = '{% url 'register' %}';">Sign Up</button>
 </div>
 
 

@@ -69,6 +69,10 @@ $(document).ready(function() {
 				post_type: "get_friends"
 			},
 			function(data){
+                if(data==3){
+                    jump_to_login();
+                    return;
+                };
                 var content = document.getElementById('slidebar2'); 
                 content.innerHTML = "";
                 for(var ele in data){
@@ -97,6 +101,10 @@ $(document).ready(function() {
                         post_type: "begin_chat"
                     },
                     function(res){
+                        if(res==3){
+                            jump_to_login();
+                            return;
+                        };
                         var data = res["chat"];
                         document.getElementById('chat-content').innerHTML = ""; 
                         for(var i in data){
@@ -142,6 +150,10 @@ $(document).ready(function() {
                 post_type: "begin_chat"
             },
             function(res){
+                if(res==3){
+                    jump_to_login();
+                    return;
+                };
                 var data = res["chat"];
                 document.getElementById('chat-content').innerHTML = ""; 
                 for(var i in data){
@@ -171,15 +183,21 @@ $(document).ready(function() {
         var content = document.getElementById('chat-content');
         var och = content.scrollHeight;
         var chatter = document.getElementById("receiver").value;
+        if(content.firstChild==null){
+            document.getElementById("load-more").setAttribute("disabled","disabled");
+            return;
+        }
         var last_id = content.firstChild.id;
-        console.log(last_id);
         $.post("./post/",
             {   chatter: chatter,
                 last_id: last_id,
                 post_type: "load_more"
             },
             function(data){
-                console.debug(data[0]);
+                if(data==3){
+                    jump_to_login();
+                    return;
+                };
                 if(data[0]==undefined){
                     document.getElementById("load-more").setAttribute("disabled","disabled");
                     console.debug("null")
@@ -243,7 +261,48 @@ function updateState(){
             post_type: "fresh_states"
         },
         function(data){
-            //console.debug(data);
+            if(data==3){
+                jump_to_login();
+                return;
+            };
+            if(data.msg_type==undefined)
+                return;
+            document.getElementById("msg-box-img").setAttribute("src",'{% static "icon/mail.png"%}');
+            var msg_type = data.msg_type;
+            var sender = data.sender;
+            var receiver = data.receiver;
+            var content = data.content;
+            if(document.getElementById(sender+'-msg')!=null){
+                ul = document.getElementById(sender+'-msg').parentNode
+                ul.parentNode.removeChild(ul);
+            };
+            if(content!="")
+                content = '<div class="remark"><span style="color:#00867A;">Remark: </span>'+content+'</div>';
+            var msg = document.getElementById("i-msg-res");
+            var str;
+            if(msg_type==2)
+                str = " require to make friends with you";
+            else if(msg_type==4)
+                str = " permit your friends request";
+            else if(msg_type==3)
+                str = " has delete you";
+            msg.innerHTML=
+            '<ul class="b-6"><a href="#" msgid="'+sender+'"class="sr-a" id="'+sender+'-msg" ><div id="'+sender+'-type" value="'+msg_type+'"></div><div id="'+sender+'-mres" class="sr-info"><img class="sr-headimg" src=\'/static/images/'+sender+'.png\' alt="Menu"/><div><div class="sr-user"><span style="color:#00867A;">'+sender+'</span>'+str+'</div>'+content+'</div></div></a></ul>' + msg.innerHTML;
+            $('a[msgid]').bind("click",function(){
+                if($(this).attr("disabled")=="disabled")
+                    return;
+                var adder = $(this).attr("msgid");
+                document.getElementById(adder+"-msg").setAttribute("disabled","disabled");
+                var pre_v = document.getElementById("premsg").value;
+                var now_v = document.getElementById(pre_v+"-msg");
+                if(now_v!=null)
+                    now_v.removeAttribute("disabled");
+                document.getElementById("premsg").value = adder;
+                document.getElementById(adder+"-mres").setAttribute("class","sr-info-af");
+                now_v = document.getElementById(pre_v+"-mres");
+                if(now_v!=null)
+                    now_v.setAttribute("class","sr-info");
+            });
         },
         'json'
     );
@@ -260,6 +319,10 @@ function updateState(){
             prechatter: prechatter
         },
         function(data){
+            if(data==3){
+                jump_to_login();
+                return;
+            };
             if(!data.friends)
                 return;
             var f = data.friends;
@@ -368,7 +431,6 @@ function print_chat_content(item,send){
     }else {     
         content.innerHTML += '<li id="'+item.id+'"class="mar-btm"><div class="media-left"><img src="'+receiver_img+'" class="img-sm" alt="Profile Picture"></div><div class="media-body pad-hor"><div class="speech"><p class="chat-details">'+item.content+'</p><p class="speech-time"><i class="fa fa-clock-o fa-fw"></i>'+item.time+'</p></div></div></li>';
     }   
-
 }
 
 
@@ -384,6 +446,10 @@ $(function() {
         	$.post("./post/",  
             	$('#chatForm').serialize(),
                 function(data){
+                    if(data==3){
+                        jump_to_login();
+                        return;
+                    };
                     print_chat_content(data,1);
                     //iNow++;
                     text.value = '';
@@ -396,10 +462,27 @@ $(function() {
     	}        
     	return false;
     }); 
+    /*$("#upload-now").submit(function() {  
+        //ajax 提交表单  
+        console.log($('#upload-now').serialize());
+        $.post("./upload_img/",  
+            $('#upload-now'),
+            function(data){
+            },
+            "json"
+        );  
+    return false;
+    }); */
 });  
 
-function error_pop(){
-
+function info_pop(t){
+    if(t==0){
+        document.getElementById('succ-w').style.display='block';
+        document.getElementById('fade2').style.display='block';
+    }else if(t==1){
+        document.getElementById('fail-w').style.display='block';
+        document.getElementById('fade2').style.display='block';
+    }
 };
 
 function move_friend(){ 
@@ -413,10 +496,14 @@ function move_friend(){
                 command_type: "move_friend"
             },
             function(data){
+                if(data==3){
+                    jump_to_login();
+                    return;
+                };
                 if(data==1)
                     history.go(0) 
                 else
-                    error_pop();
+                    info_pop(1);
             },
             'json'
         );
@@ -431,17 +518,97 @@ function delete_friend(){
                 command_type: "delete_friend"
             },
             function(data){
+                if(data==3){
+                    jump_to_login();
+                    return;
+                };
                 if(data==1)
                     history.go(0) 
                 else
-                    error_pop();
+                    info_pop(1);
+            },
+            'json'
+        );
+};
+
+function search_friend_result(data){
+    document.getElementById('adder').value="";
+    document.getElementById('i-sr-w').style.display='block';
+    document.getElementById('fade').style.display='block';
+    var res_b = document.getElementById('i-sr-res');
+    res_b.innerHTML = "";
+    for (var i in data){
+        res_b.innerHTML += '<ul class="b-6"><a id="'+data[i].username+'-ua" resid="'+data[i].username+'" href="#" class="sr-a"><div id="'+data[i].username+'-res" class="sr-info"><img class="sr-headimg" src=\'{% static "images/"%}'+data[i].username+'.png\' alt="Menu"/><div><div class="sr-user">'+data[i].username+'</div></div></div></a></ul>';
+    };
+    $('a[resid]').bind("click",function(){
+        if($(this).attr("disabled")=="disabled")
+            return;
+        var adder = $(this).attr("resid");
+        document.getElementById(adder+"-ua").setAttribute("disabled","disabled");
+        var pre_v = document.getElementById("adder").value;
+        var now_v = document.getElementById(pre_v+"-ua");
+        if(now_v!=null)
+            now_v.removeAttribute("disabled");
+        document.getElementById("adder").value = adder;
+        document.getElementById(adder+"-res").setAttribute("class","sr-info-af");
+        now_v = document.getElementById(pre_v+"-res");
+        if(now_v!=null)
+            now_v.setAttribute("class","sr-info");
+    });
+};
+
+function add_friends() {
+    if(document.getElementById('adder').value=="")
+        return;
+    document.getElementById('i-sr-w').style.display='none';
+    document.getElementById('fade').style.display='none';
+    var friend = document.getElementById('adder').value;
+    var remark = document.getElementById('add-description').value;
+    $.post("./command/",
+            {  friend:friend, 
+                remark:remark,
+                command_type: "add_friend"
+            },
+            function(data){
+                if(data==3){
+                    jump_to_login();
+                    return;
+                };
+                if(data==1)
+                    info_pop(0) 
+                else
+                    info_pop(1);
             },
             'json'
         );
 };
 
 function search_friend(){
-
+    var maf = document.getElementById('my-add-friend');
+    var friend = maf.value;
+    maf.value="";
+    if(friend=="")
+        return;
+    document.getElementById('i-add-w').style.display='none';
+    document.getElementById('fade').style.display='none';
+    $.post("./command/",
+            {  friend:friend, 
+                command_type: "search_friend"
+            },
+            function(data){
+                if(data==3){
+                    jump_to_login();
+                    return;
+                };
+                console.log(data);
+                if(data.res!=0){
+                    search_friend_result(data.data);
+                }
+                else
+                    info_pop(1);
+            },
+            'json'
+        );
 };
 
 function add_group(){
@@ -453,11 +620,15 @@ function add_group(){
                 command_type: "add_group"
             },
             function(data){
+                if(data==3){
+                    jump_to_login();
+                    return;
+                };
                 console.log(data);
                 if(data==1)
                     history.go(0) 
                 else
-                    error_pop();
+                    info_pop(1);
             },
             'json'
         );
@@ -474,17 +645,61 @@ function delete_group(){
                 command_type: "delete_group"
             },
             function(data){
+                if(data==3){
+                    jump_to_login();
+                    return;
+                };
                 console.log(data);
                 if(data==1)
-                    history.go(0) 
+                    history.go(0);
                 else
-                    error_pop();
+                    info_pop(1);
             },
             'json'
         );
-
 }
 
+function accept_msg(){
+    var premsg = document.getElementById('premsg').value;
+    $.post("./command/",
+        {
+            command_type: "accept_msg",
+            friend: premsg
+        },
+        function(data){
+            if(data==3){
+                jump_to_login();
+                return;
+            };
+            if(data==1){
+                info_pop(0);
+                delete_msg();
+            }
+            else
+                info_pop(1);
+        },
+        'json'
+    );
+};
+
+function delete_msg(){
+    var premsg = document.getElementById('premsg').value;
+    if(document.getElementById(premsg+'-msg')!=null){
+        ul = document.getElementById(premsg+'-msg').parentNode
+        ul.parentNode.removeChild(ul);
+    };
+};
+
+function msg_box_click(){
+    document.getElementById('msg-box-img').setAttribute('src','{% static "icon/chat.png"%}');
+    document.getElementById('i-msg-w').style.display='block';
+    document.getElementById('fade').style.display='block';
+};
+
+function jump_to_login(){
+    document.getElementById('lost-w').style.display='block';
+    document.getElementById('fade2').style.display='block';
+}
 
 /*]]>*/</script>
 </head>
@@ -561,6 +776,10 @@ function delete_group(){
 		</div>
 		<div id="Second-info" class="user-info">
 			<img src='{% static "images/"%}{{request.user.username}}.png'>
+            <a id="i-msg" href="javascript:void(0)" onclick = "
+            msg_box_click()"class="msg-i">
+                <img  class="f-icon-m" id="msg-box-img"src='{% static "icon/chat.png"%}'>
+            </a>
 			<h1>Hello, <div><span>{{request.user.username}}</span> !</h1>
             <a id="i-info" href="javascript:void(0)" onclick = "document.getElementById('i-info-w').style.display='block';document.getElementById('fade').style.display='block'"><img class="f-icon" src='{% static "icon/tools.png"%}'></a>
             <a id="i-add" href="javascript:void(0)" onclick = "document.getElementById('i-add-w').style.display='block';document.getElementById('fade').style.display='block'"><img class="f-icon" src='{% static "icon/zoomin.png"%}'></a>
@@ -669,6 +888,21 @@ function delete_group(){
 </div>
 
 
+<!--Search Friend Result/-->
+<div id="i-sr-w" class="bubble_1">
+    <div class="b-1">
+        <h2>Search Result</h2>
+        <a href = "javascript:void(0)"  class="exit" onclick = "document.getElementById('i-sr-w').style.display='none';document.getElementById('fade').style.display='none'">X</a>
+    </div>
+    <br>
+    <div class="b-5" id="i-sr-res">
+    </div>
+    <input id="add-description" placeholder="Input remark">
+    <button id="O-1" class="ok" onclick="add_friends()">Add</button>
+    <button id="c-1" class="cancel" onclick = "document.getElementById('i-sr-w').style.display='none';document.getElementById('fade').style.display='none'">Cancel</button>
+    </div>
+</div>
+
 <!--delete Group/-->
 <div id="i-dg-w" class="bubble_1">
     <div class="b-1">
@@ -706,18 +940,77 @@ function delete_group(){
     </div>
     <br>
     <div class="b-4">
-        <form action="" method="post" enctype="multipart/form-data">
+        <form id="upload-now" action="/upload_img/" method="post" enctype="multipart/form-data">
         <!-- MAX_FILE_SIZE will parsed before your script runs ... -->
             <input readonly="readonly"  type="text"  size="20" name="upfile" id="upfile" style="border:1px dotted #ccc" value="Choose a image to upload">  
             <input type="button" value="..." onclick="path.click()" >  
-            <input type="file" id="path" style="display:none"  onchange="upfile.value=this.value"  accept=".png,.jpg,.bmp">
+            <input type="file" name="image" id="path" style="display:none"  onchange="upfile.value=this.value"  accept=".png,.jpg,.bmp">
             <input type="hidden" name="MAX_FILE_SIZE" value="300000" />
             <input type="submit" class="upload" value="Upload" />
         </form>
     </div>
 </div>
 
+<!--info pop/-->
+<div id="succ-w" class="bubble_3">
+    <div class="b-1">
+        <h2>~</h2>
+        <a href = "javascript:void(0)"  class="exit" onclick = "document.getElementById('succ-w').style.display='none';document.getElementById('fade').style.display='none'">X</a>
+    </div>
+    <br>
+    <div class="b-4">
+        <p>Success for the request<span id="f-delete-name" style="
+  color: #00cfbd;"></span>!</p>
+        <button id="O-2" onclick="document.getElementById('succ-w').style.display='none';document.getElementById('fade2').style.display='none'" class="ok-2">ok</button>
+    </div>
+</div>
+<div id="fail-w" class="bubble_3">
+    <div class="b-1">
+        <h2>~</h2>
+        <a href = "javascript:void(0)"  class="exit" onclick = "document.getElementById('fail-w').style.display='none';document.getElementById('fade2').style.display='none'">X</a>
+    </div>
+    <br>
+    <div class="b-4">
+        <p>Fail for the request<span id="f-delete-name" style="
+  color: #00cfbd;"></span>!</p>
+        <button id="O-2" onclick="document.getElementById('fail-w').style.display='none';document.getElementById('fade').style.display='none'" class="ok-2">ok</button>
+    </div>
+</div>
+
+<!--Lost link-->
+<div id="lost-w" class="bubble_3">
+    <div class="b-1">
+        <h2>ERROR</h2>
+    </div>
+    <br>
+    <div class="b-4">
+        <p><span id="f-delete-name" style="
+  color: #00cfbd;">You have logout! </span>Jump to login</p>
+        <button id="O-2" onclick="window.location.href = '{% url 'login' %}';" class="ok-2">ok</button>
+    </div>
+</div>
+
+<!--MsgBox/-->
+<div id="i-msg-w" class="bubble_1">
+    <div class="b-1">
+        <h2>New Message!</h2>
+        <a href = "javascript:void(0)"  class="exit" onclick = "document.getElementById('i-msg-w').style.display='none';document.getElementById('fade').style.display='none'">X</a>
+    </div>
+    <br>
+    <p style="padding:0 auto;margin:0 auto;color:#333;">Refresh to chat with your new friend</p>
+    <div class="b-5" id="i-msg-res">
+    </div>
+        <button id="O-1" class="ok" onclick="accept_msg()">Accept</button>
+        <button id="c-1" class="cancel" onclick = "delete_msg()">Delete</button>
+    </div>
+</div>
+
 <div id="fade" class="black_overlay"></div> 
+<div id="fade2" class="black_overlay_2"></div> 
+
+<div id="adder" type="hidden" value=""></div>
+
+<div id="premsg" type="hidden" value=""></div>
 </body>
 
 
