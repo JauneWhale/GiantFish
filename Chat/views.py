@@ -71,6 +71,9 @@ def post(request):
     if not request.user.is_authenticated():
         return HttpResponse(3)
     if status.active_user[request.user.username].rest == 0:
+        tu = UserInfo.objects.get(username=request.user)
+        tu.state = 'F'
+        tu.save()
         logout(request)
         return HttpResponse(3)
     if request.method == 'POST':
@@ -242,6 +245,9 @@ def command(request):
     if not request.user.is_authenticated():
         return HttpResponse(3)
     if status.active_user[request.user.username].rest == 0:
+        tu = UserInfo.objects.get(username=request.user)
+        tu.state = 'F'
+        tu.save()
         logout(request)
         return HttpResponse(3)
     if request.method == 'POST':
@@ -343,6 +349,9 @@ def upload_file(request):
     elif request.user.username not in status.active_user.keys():
         status.add_user(request.user)
     if status.active_user[request.user.username].rest == 0:
+        tu = UserInfo.objects.get(username=request.user)
+        tu.state = 'F'
+        tu.save()
         logout(request)
     import Image
     import time

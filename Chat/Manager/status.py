@@ -34,13 +34,10 @@ class StatOfUser:
 
     def __init__(self, user):
         self.msg = Queue.Queue(maxsize=100)
-        self.stat = True
-        self.rest = self.user_rest_time
+        self.stat = False
+        self.rest = 0
         self.user = user
         self.new_chat = False
-        tu = UserInfo.objects.get(username=user)
-        tu.state = 'T'
-        tu.save()
 
     def user_online(self):
         self.stat = True
@@ -52,6 +49,9 @@ class StatOfUser:
     def user_offline(self):
         self.stat = False
         self.rest = 0
+        tu = UserInfo.objects.get(username=self.user)
+        tu.state = 'F'
+        tu.save()
 
     def reduce_rest_time(self):
         if not self.stat:
@@ -77,14 +77,12 @@ class Status(threading.Thread):
         name = user.username
         if name not in self.active_user.keys():
             self.active_user[name] = StatOfUser(user)
-        else:
-            self.active_user[name].user_online()
+        self.active_user[name].user_online()
 
     def add_user(self, user):
         name = user.username
         if name not in self.active_user.keys():
             self.active_user[name] = StatOfUser(user)
-            self.active_user[name].user_offline()
 
     def reduce_rest_time(self):
         for i in self.active_user.keys():
@@ -109,14 +107,12 @@ class Status(threading.Thread):
         name = user.username
         if name not in self.active_user.keys():
             self.active_user[name] = StatOfUser(user)
-            self.active_user[name].state = 'F'
         self.active_user[name].new_chat = True
 
     def remove_unread_flag(self, user):
         name = user.username
         if name not in self.active_user.keys():
             self.active_user[name] = StatOfUser(user)
-            self.active_user[name].state = 'F'
         self.active_user[name].new_chat = False
 
     def print_rest_time(self):
