@@ -26,7 +26,7 @@
 
 {% block content %}
 
-     <div class="contact-form">
+<div class="contact-form">
 <form method="post" action="{% url 'login' %}">
      <div class="signin">
 
@@ -35,7 +35,7 @@
     {{ form.password }}
 
 {# Assumes you setup the password_reset view in your URLconf #}
-<p><a href="{% url 'password_reset' %}">Forgot Password?</a></p>
+<p><a disable="disable">Forgot Password? Please connect with author ZRZ</a></p>
 
 </div>
 <input id="sign-in" type="submit" value="Sign In" />

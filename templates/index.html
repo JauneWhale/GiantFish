@@ -175,7 +175,6 @@ $(document).ready(function() {
         info = document.getElementById("fi-1-name");
         info.innerHTML = chatter;
         document.getElementById("f-delete-name").innerHTML = chatter;
-        //info.getElementsByTagName("p")[0].setAttribute('src','{% static "images/"%}'+chatter+'.png');
     });
     $('#load-more').bind("click",function(){
         if($(this).attr("disabled")=="disabled")
@@ -329,6 +328,7 @@ function updateState(){
             var g = data.groups;
             var c = data.chats;
             var content = document.getElementById('slidebar2'); 
+            //Fresh friends
             for(var ele in f){
                 var inf = document.getElementById(f[ele][0]);
                 var small = document.getElementById(f[ele][0]+'-p');
@@ -352,9 +352,11 @@ function updateState(){
                     tmp.innerHTML = "offline";
                 }
             };
+            //Fresh Groups
             for (var i in g) {
                 
             };
+            //New chat
             for (var i in c){
                 console.log(c[i]);
                 var chatter = document.getElementById("receiver").value;
@@ -708,7 +710,7 @@ function jump_to_login(){
 <div id="mainContainer" class="ui">
      <div id="friendBar1">
 	<div id="header">
-		<p id="logo">GiantYu</p>
+		<a style="text-decoration:none;" href="./logout"><p id="logo">Logout</p></a>
 	</div>
 	<div id="slidebar1"  class="slide1">
         <input type="hidden" id="pre_group" value="Friend"/>
@@ -727,7 +729,6 @@ function jump_to_login(){
     </div>
     <div id="friendBar2">
 		<form action="#" class="search">
-			<input placeholder="search..." type="search" name="" id="">
 		</form>
 	<div id="slidebar2"  class="slide2">
 		{% for friend in friends %}
@@ -767,7 +768,7 @@ function jump_to_login(){
 	</div>
 	<div id="right-bar">
 		<div id="First-info" class="user-info">
-			<a href="./logout"><img src="{% static "icon/profle.png"%}"></a>
+			<img src="{% static "icon/profle.png"%}">
 			<h1>hello, <span>..</span> !</h1>
 			<p>Start chatting with Friends</p>
             <a id="f-info" href="javascript:void(0)" onclick = "if(document.getElementById('receiver').value!=''){document.getElementById('f-info-w').style.display='block';document.getElementById('fade').style.display='block';}"><img class="f-icon" src='{% static "icon/aperture.png"%}'></a>
@@ -973,7 +974,7 @@ function jump_to_login(){
     <div class="b-4">
         <p>Fail for the request<span id="f-delete-name" style="
   color: #00cfbd;"></span>!</p>
-        <button id="O-2" onclick="document.getElementById('fail-w').style.display='none';document.getElementById('fade').style.display='none'" class="ok-2">ok</button>
+        <button id="O-2" onclick="document.getElementById('fail-w').style.display='none';document.getElementById('fade2').style.display='none'" class="ok-2">ok</button>
     </div>
 </div>
 
