@@ -132,18 +132,11 @@ def post(request):
             fr = FriendRelation.objects.filter(u1_name=sender, u2_name=receiver)
             if len(fr) == 0:
                 fr = FriendRelation.objects.filter(u1_name=receiver, u2_name=sender)
-                # i = fr[0]
-                # i.u2_chat_num = 0
-                # i.save()
                 fr.update(u2_chat_num=0)
             else:
-                # i = fr[0]
-                # i.u1_chat_num = 0
-                # i.save()
                 fr.update(u1_chat_num=0)
             # Remove unread flag in the status
             status.remove_unread_flag(receiver)
-
             # set the least and max default num
             chat_num = request.POST.get("chat_num")
             if chat_num > 20:
@@ -156,7 +149,6 @@ def post(request):
             # Change to JSON
             res["chat"] = ListtoJSON(chats)
             res["info"] = ChattoJSON(UserInfo.objects.get(username=receiver))
-            # return HttpResponse()
             return JsonResponse(res)
 
         # load more chatting history
@@ -338,7 +330,6 @@ def command(request):
 def upload_file(request):
     # Obtain the controller
     status = Status()
-    user = request.user
     global HasOpened
     if not HasOpened:
         status.setDaemon(True)
@@ -358,8 +349,6 @@ def upload_file(request):
     photo = request.FILES.get('image', None)
     logging.debug(request.FILES)
     if photo:
-        phototime = request.user.username + str(time.time()).split('.')[0]
-        photo_last = str(photo).split('.')[-1]
         photoname = '%s.%s' % (request.user.username, 'png')
         img = Image.open(photo)
         logging.debug(photoname)
